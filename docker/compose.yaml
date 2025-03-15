@@ -1,0 +1,27 @@
+name: indigonotes
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 8000:8000
+    secrets:
+      - supa_key
+      - supa_url
+      - rsa_psw
+      - rsa_priv_key
+      - smtp_psw
+
+secrets:
+  supa_key:
+    environment: service_role_key
+  supa_url:
+    environment: supa_url
+  smtp_psw:
+    environment: smtp_psw
+  rsa_psw:
+    environment: rsa_psw
+  rsa_priv_key:
+    file: myprivatekey.pem
