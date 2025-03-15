@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - 8000:8000
+      - 7000:80
     secrets:
       - supa_key
       - supa_url
