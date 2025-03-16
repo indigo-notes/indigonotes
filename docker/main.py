@@ -26,7 +26,7 @@ async def register(creds: Credentials) -> RegistrationResponse:
     return RegistrationResponse(message=r)
 
 def sign_up(username: str, password: str, confirm_password: str, email_address: str):
-    res = rq.post("http://0.0.0.0:80",json=Credentials(username=username, password=password, confirm_password=confirm_password, email=email_address).model_dump())
+    res = rq.post("http://0.0.0.0:80/signup",json=Credentials(username=username, password=password, confirm_password=confirm_password, email=email_address).model_dump())
     if res.json()["message"] == "User successfully registered! You're now welcome to go to the main application and sign in":
         send_welcome_email(email_address, username)
     return res.json()["message"]
@@ -34,12 +34,16 @@ def sign_up(username: str, password: str, confirm_password: str, email_address: 
 def upload_note_to_supa(note: str):
     response = supa.from_("notes").select("*").eq("user", req.username).execute()
     data = response.data
-    if len(data)> 0 and len(data) == 100:
+    if len(data) == 100:
         return "You reached the maximum number of available notes, please delete some of them"
-    else:
+    elif 0 < len(data) < 100:
         note_id = max([len(data), data[-1]["number"]])+1
         supa.table("notes").insert({"note": encrypt_note(note), "user": req.username, "number": note_id}).execute()
-        return f"Successfully updated the note! Your note has ID: {len(data)+1}"
+        return f"Successfully updated the note! Your note has ID: {note_id}"
+    else:
+        note_id = len(data)+1
+        supa.table("notes").insert({"note": encrypt_note(note), "user": req.username, "number": note_id}).execute()
+        return f"Successfully updated the note! Your note has ID: {note_id}"
 
 def change_password(old_password: str, new_password: str, confirm_new_password: str):
     if old_password == new_password:
