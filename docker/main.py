@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends, HTTPException, Header
 from pydantic import BaseModel
 from userAuth import authenticate_user, sign_up_user, req, supa, check_psw, encryption
 from rsaEncrypt import encrypt_note, decrypt_note
@@ -6,6 +6,10 @@ from emailServices import send_welcome_email, send_recover_password
 import gradio as gr
 import requests as rq
 import pandas as pd
+
+g = open("/run/secrets/indigonotes_key")
+indigonotes_api_key = g.read()
+g.close()
 
 app = FastAPI()
 
@@ -20,13 +24,23 @@ class Credentials(BaseModel):
 class RegistrationResponse(BaseModel):
     message: str
 
+def verify_api_key(x_api_key: str):
+    if x_api_key == indigonotes_api_key:
+        return x_api_key
+    else:
+        raise HTTPException(status_code=401, detail="Invalid API key")
+
 @app.post("/signup")
-async def register(creds: Credentials) -> RegistrationResponse:
+async def register(creds: Credentials, x_api_key: str = Depends(verify_api_key)) -> RegistrationResponse:
     r = sign_up_user(creds.username, creds.password, creds.confirm_password, creds.email)
     return RegistrationResponse(message=r)
 
 def sign_up(username: str, password: str, confirm_password: str, email_address: str):
-    res = rq.post("http://0.0.0.0:80/signup",json=Credentials(username=username, password=password, confirm_password=confirm_password, email=email_address).model_dump())
+    headers = {
+        "x-api-key": indigonotes_api_key,  # Replace with the actual API key
+        "Content-Type": "application/json"
+    }
+    res = rq.post("http://0.0.0.0:80/signup",json=Credentials(username=username, password=password, confirm_password=confirm_password, email=email_address).model_dump(), headers=headers)
     if res.json()["message"] == "User successfully registered! You're now welcome to go to the main application and sign in":
         send_welcome_email(email_address, username)
     return res.json()["message"]
@@ -92,7 +106,7 @@ def delete_notes(notes_to_delete: str):
         return "You must only provide comma-separated numbers reporting the IDs of the notes you want to delete, as in this example: 3,4,5"
     else:
         for tf in to_delete:
-            supa.table("notes").delete().eq("number", tf).execute()
+            supa.table("notes").delete().eq("number", tf).eq("user", req.username).execute()
         return "Notes deleted successfully"
 
 with gr.Blocks(theme=theme, title="Write Your Notes") as demo:

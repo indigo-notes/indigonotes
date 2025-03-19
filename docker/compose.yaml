@@ -13,6 +13,7 @@ services:
       - rsa_psw
       - rsa_priv_key
       - smtp_psw
+      - indigonotes_key
 
 secrets:
   supa_key:
@@ -25,3 +26,5 @@ secrets:
     environment: rsa_psw
   rsa_priv_key:
     file: myprivatekey.pem
+  indigonotes_key:
+    environment: indigonotes_api_key

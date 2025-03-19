@@ -8,7 +8,7 @@ g = open("/run/secrets/rsa_psw")
 pwd = g.read()
 g.close()
 
-with open("/run/secrets/rsa_priv_key", "rb") as f:
+with open("docker/mysecretkey.pem", "rb") as f:
     data = f.read()
     mykey = RSA.import_key(data, pwd)
 
