@@ -12,7 +12,6 @@ services:
       - supa_url
       - rsa_psw
       - rsa_priv_key
-      - smtp_psw
       - indigonotes_key
       - courier_key
 
@@ -21,8 +20,6 @@ secrets:
     environment: service_role_key
   supa_url:
     environment: supa_url
-  smtp_psw:
-    environment: smtp_psw
   rsa_psw:
     environment: rsa_psw
   rsa_priv_key:
