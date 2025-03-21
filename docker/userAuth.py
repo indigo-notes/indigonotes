@@ -1,6 +1,5 @@
 from supaConfig import supa
 from hashlib import sha256
-from gradio import Request
 
 class Encrypter:
     def __init__(self):
@@ -11,17 +10,6 @@ class Encrypter:
         return enc.hexdigest()
 
 encryption = Encrypter()
-req = Request()
-
-def authenticate_user(username: str, password: str) -> bool:
-    """Authenticates the user through username and password"""
-    response = supa.from_("users").select("*").eq("username", encryption.encrypt(username)).eq("password", encryption.encrypt(password)).execute()
-    data = response.data
-    if len(data) == 0:
-        return False
-    else:
-        req.username = encryption.encrypt(username)
-        return True
 
 def check_psw(psw: str):
     if len(psw) < 6:

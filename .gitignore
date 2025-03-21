@@ -1,5 +1,4 @@
 .mypy_cache/
-.github/
 notes-saas.code-workspace
 docker/__pycache__/
 docker/.env
