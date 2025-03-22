@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, Header
 from pydantic import BaseModel
 from userAuth import sign_up_user, supa, check_psw, encryption
 import uuid
@@ -47,7 +47,7 @@ def authenticate_user(username: str, password: str) -> bool:
         req.session_hash = encryption.encrypt(str(visit_id))
         return True
 
-def verify_api_key(x_api_key: str):
+def verify_api_key(x_api_key: str = Header(None)):
     if x_api_key == indigonotes_api_key:
         return x_api_key
     else:
@@ -64,9 +64,10 @@ async def register(creds: Credentials, x_api_key: str = Depends(verify_api_key))
 
 def sign_up(username: str, password: str, confirm_password: str, email_address: str):
     headers = {
-        "x_api_key": indigonotes_api_key,
+        "Content-Type": "application/json",
+        "x-api-key": indigonotes_api_key,
     }
-    res = rq.post("http://0.0.0.0:80/signup",json=Credentials(username=username, password=password, confirm_password=confirm_password, email=email_address).model_dump(), params=headers)
+    res = rq.post("http://0.0.0.0:80/signup",json=Credentials(username=username, password=password, confirm_password=confirm_password, email=email_address).model_dump(), headers=headers)
     if res.json()["message"] == "User successfully registered! You're now welcome to go to the main application and sign in":
         send_welcome_email(email_address, username)
     return res.json()["message"]
