@@ -164,6 +164,8 @@ def delete_notes(notes_to_delete: str):
 with gr.Blocks(theme=theme, title="Write Your Notes") as demo:
     with gr.Sidebar(label="Side Menu", open=False):
         gr.Button("Visit Our Website", link="https://indigonotes.com")
+        gr.Button("Leave Feedback", link="https://forms.gle/NRjsYPkY7AAt42Rv6")
+        gr.Button("Problems? Report them here!", link="https://github.com/indigo-notes/indigonotes/issues")
     with gr.Row():
         input_text = gr.TextArea(label="Your note", info="Write your note here (max. 1000 characters)", max_length=1000)
         @gr.render(inputs=input_text)
@@ -178,9 +180,52 @@ with gr.Blocks(theme=theme, title="Write Your Notes") as demo:
             submit_button = gr.Button(value="Upload Note").click(fn=upload_note_to_supa, inputs=[input_text], outputs=[upload_status])
     demo.load()
 
+def select_note(note: str):
+    try:
+        note_id = int(note)
+        notes = supa.table("notes").select("*").eq("number", note_id).eq("user", req.username).execute()
+        data = notes.data
+        return decrypt_note(data[0]["note"])
+    except ValueError:
+        return "You should provide a valid number ID"
+
+def update_note(note_id: str, note: str):
+    try:
+        note_id = int(note_id)
+        notes = supa.table("notes").update({"note": encrypt_note(note)}).eq("number", note_id).eq("user", req.username).execute()
+        return "Note updated successfully"
+    except ValueError:
+        return "You should provide a valid number ID"
+
+with gr.Blocks(theme=theme, title="Modify Your Notes") as updemo:
+    with gr.Sidebar(label="Side Menu", open=False):
+        gr.Button("Visit Our Website", link="https://indigonotes.com")
+        gr.Button("Leave Feedback", link="https://forms.gle/NRjsYPkY7AAt42Rv6")
+        gr.Button("Problems? Report them here!", link="https://github.com/indigo-notes/indigonotes/issues")
+    with gr.Row():
+        with gr.Column():
+            txtbox = gr.Textbox(label="Insert here the number ID of the note you want to modify")
+            modify_button = gr.Button("Get the note to modify")
+            with gr.Row():
+                input_text = gr.TextArea(label="Your note", info="Write your note here (max. 1000 characters)", max_length=1000)
+                modify_button.click(fn=select_note, inputs=[txtbox], outputs=[input_text])
+                @gr.render(inputs=input_text)
+                def render_markdown(text):
+                    if len(text) == 0:
+                        gr.Markdown("## No Input Provided")
+                    else:
+                        gr.Markdown(text)
+    with gr.Row():
+        with gr.Column():
+            update_status = gr.Textbox(label="Note Update Status", placeholder="Note not updated yet")
+            upd_button = gr.Button(value="Upload Note").click(fn=update_note, inputs=[txtbox, input_text], outputs=[update_status])
+    updemo.load()
+
 with gr.Blocks(theme=theme, title="See Your Notes") as dm:
     with gr.Sidebar(label="Side Menu", open=False):
         gr.Button("Visit Our Website", link="https://indigonotes.com")
+        gr.Button("Leave Feedback", link="https://forms.gle/NRjsYPkY7AAt42Rv6")
+        gr.Button("Problems? Report them here!", link="https://github.com/indigo-notes/indigonotes/issues")
     with gr.Row():
         with gr.Column():
             displayed_notes = gr.Markdown(label="Your Notes")
@@ -190,6 +235,8 @@ with gr.Blocks(theme=theme, title="See Your Notes") as dm:
 with gr.Blocks(theme=theme, title="Download Your Notes") as downif:
     with gr.Sidebar(label="Side Menu", open=False):
         gr.Button("Visit Our Website", link="https://indigonotes.com")
+        gr.Button("Leave Feedback", link="https://forms.gle/NRjsYPkY7AAt42Rv6")
+        gr.Button("Problems? Report them here!", link="https://github.com/indigo-notes/indigonotes/issues")
     with gr.Row():
         with gr.Column():
             downloaded_notes = gr.Markdown(label="Download URL")
@@ -199,6 +246,8 @@ with gr.Blocks(theme=theme, title="Download Your Notes") as downif:
 with gr.Blocks(theme=theme, title="See Your Notes") as dm:
     with gr.Sidebar(label="Side Menu", open=False):
         gr.Button("Visit Our Website", link="https://indigonotes.com")
+        gr.Button("Leave Feedback", link="https://forms.gle/NRjsYPkY7AAt42Rv6")
+        gr.Button("Problems? Report them here!", link="https://github.com/indigo-notes/indigonotes/issues")
     with gr.Row():
         with gr.Column():
             displayed_notes = gr.Markdown(label="Your Notes")
@@ -208,6 +257,8 @@ with gr.Blocks(theme=theme, title="See Your Notes") as dm:
 with gr.Blocks(theme=theme, title="Delete Your Notes") as ddm:
     with gr.Sidebar(label="Side Menu", open=False):
         gr.Button("Visit Our Website", link="https://indigonotes.com")
+        gr.Button("Leave Feedback", link="https://forms.gle/NRjsYPkY7AAt42Rv6")
+        gr.Button("Problems? Report them here!", link="https://github.com/indigo-notes/indigonotes/issues")
     with gr.Row():
         with gr.Column():
             to_eliminate = gr.Textbox(label="Input here notes to be deleted, comma-separated", info="Here is an example: 3,4,5", placeholder="eg. 1,2,3")
@@ -218,6 +269,8 @@ with gr.Blocks(theme=theme, title="Delete Your Notes") as ddm:
 with gr.Blocks(theme=theme, title="Your Dashboard") as usrd:
     with gr.Sidebar(label="Side Menu", open=False):
         gr.Button("Visit Our Website", link="https://indigonotes.com")
+        gr.Button("Leave Feedback", link="https://forms.gle/NRjsYPkY7AAt42Rv6")
+        gr.Button("Problems? Report them here!", link="https://github.com/indigo-notes/indigonotes/issues")
     with gr.Row():
         with gr.Column():
             gr.HTML("<h3 align='center'>Change Password</h3>")
@@ -244,7 +297,7 @@ with gr.Blocks(theme=theme, title="Your Dashboard") as usrd:
 
 
 
-tbi = gr.TabbedInterface([demo, dm, ddm, downif, usrd], ["Write Your Notes", "See Your Notes", "Delete Your Notes", "Download Your Notes", "Your Dashboard"], title="IndigoNotes", theme=theme)
+tbi = gr.TabbedInterface([demo, updemo, dm, ddm, downif, usrd], ["Write Your Notes", "Update Your Notes", "See Your Notes", "Delete Your Notes", "Download Your Notes", "Your Dashboard"], title="IndigoNotes", theme=theme)
 io = gr.Interface(fn = sign_up, inputs=[gr.Textbox(label="Username"), gr.Textbox(label="Password", type="password"), gr.Textbox(label="Confirm Password", type="password"), gr.Textbox(label="Email Address", type="email")], outputs=[gr.Textbox(label="Operation Status")], theme=theme, title="Sign up - IndigoNotes")
 
 psr = gr.Interface(title="Recover Password - IndigoNotes", fn=send_recover_password, inputs=[gr.Textbox(label="Email Address", type="email"), gr.Textbox(label="Username")], outputs=[gr.Textbox(label="Operation Status")], theme=theme)
